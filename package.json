@@ -1,0 +1,29 @@
+{
+  "name": "frontend-datacenter-protection-and-monitoring",
+  "version": "1.0.0",
+  "description": "User interface shows device monitoring",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EnginKARATAS/frontend-datacenter-protection-and-monitoring.git"
+  },
+  "keywords": [
+    "angular",
+    "service",
+    "monitoring",
+    "devices",
+    "dht11",
+    "mq135",
+    "hcsr04",
+    "device"
+  ],
+  "author": "Engin Karataş",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EnginKARATAS/frontend-datacenter-protection-and-monitoring/issues"
+  },
+  "homepage": "https://github.com/EnginKARATAS/frontend-datacenter-protection-and-monitoring#readme"
+}
