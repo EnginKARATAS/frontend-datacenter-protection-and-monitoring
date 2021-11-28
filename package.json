@@ -25,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/EnginKARATAS/frontend-datacenter-protection-and-monitoring/issues"
   },
-  "homepage": "https://github.com/EnginKARATAS/frontend-datacenter-protection-and-monitoring#readme"
+  "homepage": "https://github.com/EnginKARATAS/frontend-datacenter-protection-and-monitoring#readme",
+  "dependencies": {
+    "@swimlane/ngx-charts": "^19.1.0"
+  }
 }
