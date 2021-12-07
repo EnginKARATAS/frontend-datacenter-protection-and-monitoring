@@ -10,3 +10,5 @@ export interface Device {
   name: string;
   mac_adres: string;
 }
+
+
