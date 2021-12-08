@@ -1,5 +1,6 @@
 <ngx-charts-line-chart
-  [legend]="legend"
+  [view] = "view"
+  [legend]="true"
   [showXAxisLabel]="showXAxisLabel"
   [showYAxisLabel]="showYAxisLabel"
   [xAxis]="xAxis"
@@ -7,12 +8,12 @@
   [xAxisLabel]="xAxisLabel"
   [yAxisLabel]="yAxisLabel"
   [timeline]="timeline"
-  [results]="multi"
-  >
+  [results]="multi">
 </ngx-charts-line-chart>
 
 <ngx-charts-line-chart
-  [legend]="legend2"
+  [view] = "view"
+  [legend]="false"
   [showXAxisLabel]="showXAxisLabel2"
   [showYAxisLabel]="showYAxisLabel2"
   [xAxis]="xAxis"
@@ -23,3 +24,4 @@
   [results]="multi2"
   >
 </ngx-charts-line-chart>
+

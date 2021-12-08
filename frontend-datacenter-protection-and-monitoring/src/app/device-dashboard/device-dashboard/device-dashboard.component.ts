@@ -10,13 +10,16 @@ import { MqService } from 'src/app/core/mq.service';
   styleUrls: ['./device-dashboard.component.css'],
 })
 export class DeviceDashboardComponent implements OnInit {
+
+  
+  
+
   multi: any[] = [];
   multi2: any[] = [];
-  view: any[] = [700, 300];
+  view: any[] = [1024, 300];
 
   // options
   legend: boolean = true;
-  legend2: boolean = true;
   showLabels: boolean = true;
   animations: boolean = true;
   xAxis: boolean = true;
@@ -28,7 +31,7 @@ export class DeviceDashboardComponent implements OnInit {
   xAxisLabel: string = 'Time';
   yAxisLabel: string = 'Heat';
   xAxisLabel2: string = 'Air';
-  yAxisLabel2: string = 'asd';
+  yAxisLabel2: string = 'Level Of Critical';
   timeline: boolean = true;
 
   colorScheme = {
@@ -41,13 +44,12 @@ export class DeviceDashboardComponent implements OnInit {
     this.getMq();
   }
   getMq() {
-    console.log('merhaba 2 ');
     
     this.mqService.getMq().subscribe((x) => {
       let data2 = [
         {
           name: 'AirQuality',
-          series: [{ name: 'a', value: 12 }],
+          series: [{ name: '', value: 0 }],
         },
         
       ];
@@ -55,7 +57,7 @@ export class DeviceDashboardComponent implements OnInit {
       this.mqService.getMq().subscribe((a) => {
         for (let i = 0; i < a.length; i++) {
           data2[0].series.push({
-            name: `${new Date(x[i].date).getMinutes()}`,
+            name: `${new Date(x[i].date).getHours()}`,
             value: Number(x[i].airQualityValue),
           });
         }
@@ -65,16 +67,15 @@ export class DeviceDashboardComponent implements OnInit {
   }
 
   getDht() {
-    console.log('merhaba 1 ');
 
     let data = [
       {
         name: 'Heat',
-        series: [{ name: '', value: 12 }],
+        series: [{ name: '', value: 0 }],
       },
       {
         name: 'Humidity',
-        series: [{ name: '', value: 12 }],
+        series: [{ name: '', value: 0 }],
       },
     ];
 
@@ -86,11 +87,11 @@ export class DeviceDashboardComponent implements OnInit {
       for (let i = 0; i < x.length; i++) {
         console.log(i);
         data[0].series.push({
-          name: `${new Date(x[i].date).getMinutes()}`,
+          name: `${new Date(x[i].date).getHours()}`,
           value: Number(x[i].heat),
         });
         data[1].series.push({
-          name: `${new Date(x[i].date).getMinutes()}`,
+          name: `${new Date(x[i].date).getHours()}`,
           value: Number(x[i].humidity),
         });
       }
