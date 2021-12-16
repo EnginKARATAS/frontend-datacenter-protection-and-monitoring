@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Dht } from '../shared/models/dht11';
+import { Dht } from '../../shared/models/dht11';
 
 @Injectable({
   providedIn: 'root',
@@ -16,6 +16,12 @@ export class Dht11Service {
   getDht(): Observable<Dht[]> {
     return this.http
       .get<Dht[]>(`${environment.apiUrl}/${this.path}/all`)
+      .pipe(map(x => x));
+  }
+
+  getDhtWithTimeInterval(date1:String, date2:String): Observable<Dht[]> {
+    return this.http
+      .get<Dht[]>(`${environment.apiUrl}/${this.path}/getbyday`+`?d1=${date1}&d2=${date2}`)
       .pipe(map(x => x));
   }
 }

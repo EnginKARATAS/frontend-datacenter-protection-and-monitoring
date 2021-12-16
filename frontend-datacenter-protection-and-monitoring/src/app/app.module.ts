@@ -8,6 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
+import {MatToolbarModule} from '@angular/material/toolbar';
 
 @NgModule({
   declarations: [
@@ -18,6 +19,7 @@ import { NgxChartsModule } from '@swimlane/ngx-charts';
     FormsModule,
     BrowserAnimationsModule ,
     DeviceDashboardModule,
+    MatToolbarModule,
 
     RouterModule
   ],
