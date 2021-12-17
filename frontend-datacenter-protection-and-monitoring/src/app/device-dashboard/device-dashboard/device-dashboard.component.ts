@@ -1,9 +1,9 @@
 import { Component, NgModule, OnInit, ViewChild } from '@angular/core';
+import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { BrowserModule } from '@angular/platform-browser';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { Dht11Service } from 'src/app/core/services/dht11.service';
 import { MqService } from 'src/app/core/services/mq.service';
-
 
 export interface PeriodicElement {
   name: string;
@@ -13,16 +13,16 @@ export interface PeriodicElement {
 }
 
 const ELEMENT_DATA: PeriodicElement[] = [
-  {position: 1, name: 'Hydrogen', weight: 1.0079, symbol: 'H'},
-  {position: 2, name: 'Helium', weight: 4.0026, symbol: 'He'},
-  {position: 3, name: 'Lithium', weight: 6.941, symbol: 'Li'},
-  {position: 4, name: 'Beryllium', weight: 9.0122, symbol: 'Be'},
-  {position: 5, name: 'Boron', weight: 10.811, symbol: 'B'},
-  {position: 6, name: 'Carbon', weight: 12.0107, symbol: 'C'},
-  {position: 7, name: 'Nitrogen', weight: 14.0067, symbol: 'N'},
-  {position: 8, name: 'Oxygen', weight: 15.9994, symbol: 'O'},
-  {position: 9, name: 'Fluorine', weight: 18.9984, symbol: 'F'},
-  {position: 10, name: 'Neon', weight: 20.1797, symbol: 'Ne'},
+  { position: 1, name: 'Hydrogen', weight: 1.0079, symbol: 'H' },
+  { position: 2, name: 'Helium', weight: 4.0026, symbol: 'He' },
+  { position: 3, name: 'Lithium', weight: 6.941, symbol: 'Li' },
+  { position: 4, name: 'Beryllium', weight: 9.0122, symbol: 'Be' },
+  { position: 5, name: 'Boron', weight: 10.811, symbol: 'B' },
+  { position: 6, name: 'Carbon', weight: 12.0107, symbol: 'C' },
+  { position: 7, name: 'Nitrogen', weight: 14.0067, symbol: 'N' },
+  { position: 8, name: 'Oxygen', weight: 15.9994, symbol: 'O' },
+  { position: 9, name: 'Fluorine', weight: 18.9984, symbol: 'F' },
+  { position: 10, name: 'Neon', weight: 20.1797, symbol: 'Ne' },
 ];
 
 @Component({
@@ -30,8 +30,36 @@ const ELEMENT_DATA: PeriodicElement[] = [
   templateUrl: './device-dashboard.component.html',
   styleUrls: ['./device-dashboard.component.css'],
 })
-
 export class DeviceDashboardComponent implements OnInit {
+  events: string[] = [];
+
+  addEvent(type: string, event: any) {
+    var date = new Date(event.value);
+
+    var selectedDate =
+      date.getFullYear()+ "-" + 
+      ("00" + (date.getMonth() + 1)).slice(-2) + "-" +
+      ("00" + date.getDate()).slice(-2) + " " +
+      ("00" + date.getHours()).slice(-2) + ":" +
+      ("00" + date.getMinutes()).slice(-2) + ":" +
+      ("00" + date.getSeconds()).slice(-2);
+    var selectedDateTomorrow =
+      date.getFullYear()+ "-" + 
+      ("00" + (date.getMonth() + 1)).slice(-2) + "-" +
+      ("00" + (date.getDate()+1)).slice(-2) + " " +
+      ("00" + date.getHours()).slice(-2) + ":" +
+      ("00" + date.getMinutes()).slice(-2) + ":" +
+      ("00" + date.getSeconds()).slice(-2);
+
+    this.getDhtWithTimeInterval(selectedDate, selectedDateTomorrow);
+    console.log("🚀 ~ file: device-dashboard.component.ts ~ line 61 ~ DeviceDashboardComponent ~ .padStart ~ selectedDateTomorrow", selectedDateTomorrow)
+    console.log("🚀 ~ file: device-dashboard.component.ts ~ line 62 ~ DeviceDashboardComponent ~ .padSend ~ selectedDate", selectedDate)
+  }
+
+  onChangeEvent(event: any) {
+    console.log(event);
+    console.log(event.value);
+  }
 
   @ViewChild('picker') picker: any;
   open() {
@@ -68,18 +96,15 @@ export class DeviceDashboardComponent implements OnInit {
   constructor(private dhtService: Dht11Service, private mqService: MqService) {}
   ngOnInit(): void {
     this.getDht();
-    this.getDhtWithTimeInterval();
     this.getMq();
   }
   getMq() {
-    
     this.mqService.getMq().subscribe((x) => {
       let data2 = [
         {
           name: 'AirQuality',
           series: [{ name: '', value: 0 }],
         },
-        
       ];
 
       this.mqService.getMq().subscribe((a) => {
@@ -94,15 +119,40 @@ export class DeviceDashboardComponent implements OnInit {
     });
   }
 
-  getDhtWithTimeInterval(){
-    
-    this.dhtService.getDhtWithTimeInterval("2021-11-27 23:21:24","2021-11-27 23:21:15").subscribe(dht11s=>{
-    console.log("🚀 ~ file: device-dashboard.component.ts ~ line 94 ~ DeviceDashboardComponent ~ this.dhtService.getDhtWithTimeInterval ~ dht11s", dht11s)
-      
-    })
+  getDhtWithTimeInterval(selectedDate: String, selectedDateTomorrow: String) {
+    let data = [
+      {
+        name: 'Heat',
+        series: [{ name: '', value: 0 }],
+      },
+      {
+        name: 'Humidity',
+        series: [{ name: '', value: 0 }],
+      },
+    ];
+    this.dhtService
+      .getDhtWithTimeInterval(selectedDate, selectedDateTomorrow)
+      .subscribe((dht11s) => {
+        for (let i = 0; i < dht11s.length; i++) {
+          console.log(i);
+          data[0].series.push({
+            name: `${new Date(dht11s[i].date)}`,
+            value: Number(dht11s[i].heat),
+          });
+          data[1].series.push({
+            name: `${new Date(dht11s[i].date)}`,
+            value: Number(dht11s[i].humidity),
+          });
+        }
+        this.dht11List = data;
+        console.log(
+          '🚀 ~ file: device-dashboard.component.ts ~ line 94 ~ DeviceDashboardComponent ~ this.dhtService.getDhtWithTimeInterval ~ dht11s',
+          dht11s
+        );
+      });
   }
-  getDht() {
 
+  getDht() {
     let data = [
       {
         name: 'Heat',

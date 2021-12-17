@@ -19,9 +19,9 @@ export class Dht11Service {
       .pipe(map(x => x));
   }
 
-  getDhtWithTimeInterval(date1:String, date2:String): Observable<Dht[]> {
+  getDhtWithTimeInterval(selectedDate:String, selectedDateTomorrow:String): Observable<Dht[]> {
     return this.http
-      .get<Dht[]>(`${environment.apiUrl}/${this.path}/getbyday`+`?d1=${date1}&d2=${date2}`)
+      .get<Dht[]>(`${environment.apiUrl}/${this.path}/getbyday`+`?d1=${selectedDateTomorrow}&d2=${selectedDate}`)
       .pipe(map(x => x));
   }
 }
