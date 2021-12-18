@@ -7,17 +7,14 @@ import { HcrsService } from 'src/app/core/services/hcrs.service';
 import { MqService } from 'src/app/core/services/mq.service';
 
 export interface PeriodicElement {
-  position: number,
+  position?: number;
   name: string;
   device: string;
   mac: string;
   triggeredDate: string;
 }
 
-const ELEMENT_DATA: PeriodicElement[] = [
-  { position: 1, name: 'Bozok University Centeral Library Datacanter', device: "121323", mac: 'Room 1, Ardunio 01', triggeredDate:"2021-12-02 12:23:33" },
- 
-];
+const ELEMENT_DATA: PeriodicElement[] = [];
 
 @Component({
   selector: 'app-device-dashboard',
@@ -31,25 +28,33 @@ export class DeviceDashboardComponent implements OnInit {
     var date = new Date(event.value);
 
     var selectedDate =
-      date.getFullYear()+ "-" + 
-      ("00" + (date.getMonth() + 1)).slice(-2) + "-" +
-      ("00" + date.getDate()).slice(-2) + " " +
-      ("00" + date.getHours()).slice(-2) + ":" +
-      ("00" + date.getMinutes()).slice(-2) + ":" +
-      ("00" + date.getSeconds()).slice(-2);
+      date.getFullYear() +
+      '-' +
+      ('00' + (date.getMonth() + 1)).slice(-2) +
+      '-' +
+      ('00' + date.getDate()).slice(-2) +
+      ' ' +
+      ('00' + date.getHours()).slice(-2) +
+      ':' +
+      ('00' + date.getMinutes()).slice(-2) +
+      ':' +
+      ('00' + date.getSeconds()).slice(-2);
     var selectedDateTomorrow =
-      date.getFullYear()+ "-" + 
-      ("00" + (date.getMonth() + 1)).slice(-2) + "-" +
-      ("00" + (date.getDate()+1)).slice(-2) + " " +
-      ("00" + date.getHours()).slice(-2) + ":" +
-      ("00" + date.getMinutes()).slice(-2) + ":" +
-      ("00" + date.getSeconds()).slice(-2);
+      date.getFullYear() +
+      '-' +
+      ('00' + (date.getMonth() + 1)).slice(-2) +
+      '-' +
+      ('00' + (date.getDate() + 1)).slice(-2) +
+      ' ' +
+      ('00' + date.getHours()).slice(-2) +
+      ':' +
+      ('00' + date.getMinutes()).slice(-2) +
+      ':' +
+      ('00' + date.getSeconds()).slice(-2);
 
     this.getDhtsWithTimeInterval(selectedDate, selectedDateTomorrow);
     this.getAirQualitiesTimeInterval(selectedDate, selectedDateTomorrow);
-    this.getTriggeredDatesTimeInterval(selectedDate, selectedDateTomorrow)
-    console.log("🚀 ~ file: device-dashboard.component.ts ~ line 61 ~ DeviceDashboardComponent ~ .padStart ~ selectedDateTomorrow", selectedDateTomorrow)
-    console.log("🚀 ~ file: device-dashboard.component.ts ~ line 62 ~ DeviceDashboardComponent ~ .padSend ~ selectedDate", selectedDate)
+    this.getTriggeredDatesTimeInterval(selectedDate, selectedDateTomorrow);
   }
 
   @ViewChild('picker') picker: any;
@@ -57,7 +62,13 @@ export class DeviceDashboardComponent implements OnInit {
     this.picker.open();
   }
 
-  displayedColumns: string[] = ['position', 'name', 'device', 'mac', 'triggeredDate'];
+  displayedColumns: string[] = [
+    'position',
+    'name',
+    'device',
+    'mac',
+    'triggeredDate',
+  ];
   dataSource = ELEMENT_DATA;
 
   dht11List: any[] = [];
@@ -84,7 +95,11 @@ export class DeviceDashboardComponent implements OnInit {
     domain: ['#5AA454', '#E44D25', '#CFC0BB', '#7aa3e5', '#a8385d', '#aae3f5'],
   };
 
-  constructor(private dhtService: Dht11Service, private mqService: MqService, private hcrsService: HcrsService) {}
+  constructor(
+    private dhtService: Dht11Service,
+    private mqService: MqService,
+    private hcrsService: HcrsService
+  ) {}
   ngOnInit(): void {
     this.getDht();
     this.getMq();
@@ -109,31 +124,100 @@ export class DeviceDashboardComponent implements OnInit {
       });
     });
   }
-  getTriggeredDatesTimeInterval(selectedDate: String, selectedDateTomorrow: String){
-    this.hcrsService.getDhtsWithTimeInterval(selectedDate, selectedDateTomorrow).subscribe(hcrs=>{
-      console.log("🚀 ~ file: device-dashboard.component.ts ~ line 116 ~ DeviceDashboardComponent ~ this.hcrsService.getDhtsWithTimeInterval ~ hcrs", hcrs)
-    });
+  getTriggeredDatesTimeInterval(
+    selectedDate: String,
+    selectedDateTomorrow: String
+  ) {
+    this.hcrsService
+      .getDhtsWithTimeInterval(selectedDate, selectedDateTomorrow)
+      .subscribe((hcrs) => {
+        for (let i = 0; i < hcrs.length; i++) {
+          this.dataSource.push({
+            name: hcrs[i].device.name.substr(0, 44),
+            device: hcrs[i].device.name.substr(44),
+            mac: hcrs[i].device.mac_adres,
+            triggeredDate: hcrs[i].triggeredDate,
+          });
+
+          this.dataSource = [...this.dataSource];
+        }
+      });
   }
 
-  getAirQualitiesTimeInterval(selectedDate: String, selectedDateTomorrow: String){
+  getAirQualitiesTimeInterval(
+    selectedDate: String,
+    selectedDateTomorrow: String
+  ) {
     let data2 = [
       {
         name: 'AirQuality',
-        series: [{ name: '', value: 0 }],
+        series: [{ name: '', value: 500 }],
       },
     ];
-    
-    this.mqService.getMqWithTimeInterval(selectedDate, selectedDateTomorrow).subscribe((mq135s) => {
-    console.log("🚀 ~ file: device-dashboard.component.ts ~ line 129 ~ DeviceDashboardComponent ~ this.mqService.getMqWithTimeInterval ~ mq135s", mq135s)
-      
-      for (let i = 0; i < mq135s.length; i++) {
-        data2[0].series.push({
-          name: `${new Date(mq135s[i].date).getHours()}`,
-          value: Number(mq135s[i].airQualityValue),
+
+    this.mqService
+      .getMqWithTimeInterval(selectedDate, selectedDateTomorrow)
+      .subscribe((mq135s) => {
+        let saatler_uni: any = [];
+        let saatler = [];
+
+        for (let i = 0; i < mq135s.length; i++) {
+          var tarih = new Date(mq135s[i].date);
+          saatler.push(tarih.getHours());
+        }
+        saatler.forEach((c) => {
+          if (!saatler_uni.includes(c)) {
+            saatler_uni.push(c);
+          }
         });
-      }
-      this.airQualityList = data2;
-    });
+
+        let obj = [];
+        for (var j = 0; j < saatler_uni.length; j++) {
+          var lo = [];
+          for (var a = 0; a < mq135s.length; a++) {
+            var tarih = new Date(mq135s[a].date);
+
+            if (tarih.getHours() == saatler_uni[j]) {
+              var saat = saatler_uni[j];
+              var veri = mq135s[a];
+              var aqv = parseInt(veri.airQualityValue);
+
+              lo.push({ saat, veri });
+            }
+          }
+          obj.push(lo);
+        }
+
+        var avarageArray = [];
+        for (let i = 0; i < obj.length; i++) {
+          let sabir = obj[i];
+
+          let toplam = 0;
+          let airQualityValue = 0;
+          let d = '';
+          let device = null;
+          for (let j = 0; j < sabir.length; j++) {
+            var aqv = parseInt(sabir[j].veri.airQualityValue);
+            toplam = toplam + aqv;
+            airQualityValue = toplam / sabir.length;
+            d =
+              sabir[j].veri.date.split(' ')[0] + ' ' + sabir[j].saat + ':00:00';
+            device = sabir[j].veri.device;
+          }
+          var id = i;
+          avarageArray.push({ id, d, airQualityValue, device });
+        }
+
+        for (let i = 0; i < avarageArray.length; i++) {
+          data2[0].series.push({
+            name: `${new Date(avarageArray[i].d).getHours()}`,
+            value: Number(avarageArray[i].airQualityValue),
+          });
+        }
+        console.log("🚀 ~ file: device-dashboard.component.ts ~ line 216 ~ DeviceDashboardComponent ~ .subscribe ~ data2", data2)
+        
+        this.airQualityList = data2;
+      });
   }
 
   getDhtsWithTimeInterval(selectedDate: String, selectedDateTomorrow: String) {
@@ -164,10 +248,6 @@ export class DeviceDashboardComponent implements OnInit {
           });
         }
         this.dht11List = data;
-        console.log(
-          '🚀 ~ file: device-dashboard.component.ts ~ line 94 ~ DeviceDashboardComponent ~ this.dhtService.getDhtsWithTimeInterval ~ dht11s',
-          dht11s
-        );
       });
   }
 
@@ -184,12 +264,7 @@ export class DeviceDashboardComponent implements OnInit {
     ];
 
     this.dhtService.getDht().subscribe((x) => {
-      console.log(
-        '🚀 ~ file: device-dashboard.component.ts ~ line 51 ~ DeviceDashboardComponent ~ this.dhtService.getDht ~ x',
-        x
-      );
       for (let i = 0; i < x.length; i++) {
-        console.log(i);
         data[0].series.push({
           name: `${new Date(x[i].date).getHours()}`,
           value: Number(x[i].heat),
@@ -200,10 +275,6 @@ export class DeviceDashboardComponent implements OnInit {
         });
       }
       this.dht11List = data;
-      console.log(
-        '🚀 ~ file: device-dashboard.component.ts ~ line 56 ~ DeviceDashboardComponent ~ this.dhtService.getDht ~ this.dht11List',
-        this.dht11List
-      );
     });
   }
 

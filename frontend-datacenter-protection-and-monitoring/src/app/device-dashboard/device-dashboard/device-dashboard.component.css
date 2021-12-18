@@ -17,6 +17,7 @@
       "sicaklik-ve-nem hava-kalitesi hava-kalitesi"
       "odaya-girildi-mi odaya-girildi-mi odaya-girildi-mi"
       ". . .";
+      max-height: -webkit-fill-available;
   }
   
   .sicaklik-ve-nem { grid-area: sicaklik-ve-nem; }
