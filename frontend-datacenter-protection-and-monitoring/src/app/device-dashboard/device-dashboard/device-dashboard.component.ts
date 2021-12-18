@@ -3,26 +3,20 @@ import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { BrowserModule } from '@angular/platform-browser';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { Dht11Service } from 'src/app/core/services/dht11.service';
+import { HcrsService } from 'src/app/core/services/hcrs.service';
 import { MqService } from 'src/app/core/services/mq.service';
 
 export interface PeriodicElement {
+  position: number,
   name: string;
-  position: number;
-  weight: number;
-  symbol: string;
+  device: string;
+  mac: string;
+  triggeredDate: string;
 }
 
 const ELEMENT_DATA: PeriodicElement[] = [
-  { position: 1, name: 'Hydrogen', weight: 1.0079, symbol: 'H' },
-  { position: 2, name: 'Helium', weight: 4.0026, symbol: 'He' },
-  { position: 3, name: 'Lithium', weight: 6.941, symbol: 'Li' },
-  { position: 4, name: 'Beryllium', weight: 9.0122, symbol: 'Be' },
-  { position: 5, name: 'Boron', weight: 10.811, symbol: 'B' },
-  { position: 6, name: 'Carbon', weight: 12.0107, symbol: 'C' },
-  { position: 7, name: 'Nitrogen', weight: 14.0067, symbol: 'N' },
-  { position: 8, name: 'Oxygen', weight: 15.9994, symbol: 'O' },
-  { position: 9, name: 'Fluorine', weight: 18.9984, symbol: 'F' },
-  { position: 10, name: 'Neon', weight: 20.1797, symbol: 'Ne' },
+  { position: 1, name: 'Bozok University Centeral Library Datacanter', device: "121323", mac: 'Room 1, Ardunio 01', triggeredDate:"2021-12-02 12:23:33" },
+ 
 ];
 
 @Component({
@@ -51,14 +45,11 @@ export class DeviceDashboardComponent implements OnInit {
       ("00" + date.getMinutes()).slice(-2) + ":" +
       ("00" + date.getSeconds()).slice(-2);
 
-    this.getDhtWithTimeInterval(selectedDate, selectedDateTomorrow);
+    this.getDhtsWithTimeInterval(selectedDate, selectedDateTomorrow);
+    this.getAirQualitiesTimeInterval(selectedDate, selectedDateTomorrow);
+    this.getTriggeredDatesTimeInterval(selectedDate, selectedDateTomorrow)
     console.log("🚀 ~ file: device-dashboard.component.ts ~ line 61 ~ DeviceDashboardComponent ~ .padStart ~ selectedDateTomorrow", selectedDateTomorrow)
     console.log("🚀 ~ file: device-dashboard.component.ts ~ line 62 ~ DeviceDashboardComponent ~ .padSend ~ selectedDate", selectedDate)
-  }
-
-  onChangeEvent(event: any) {
-    console.log(event);
-    console.log(event.value);
   }
 
   @ViewChild('picker') picker: any;
@@ -66,7 +57,7 @@ export class DeviceDashboardComponent implements OnInit {
     this.picker.open();
   }
 
-  displayedColumns: string[] = ['position', 'name', 'weight', 'symbol'];
+  displayedColumns: string[] = ['position', 'name', 'device', 'mac', 'triggeredDate'];
   dataSource = ELEMENT_DATA;
 
   dht11List: any[] = [];
@@ -93,7 +84,7 @@ export class DeviceDashboardComponent implements OnInit {
     domain: ['#5AA454', '#E44D25', '#CFC0BB', '#7aa3e5', '#a8385d', '#aae3f5'],
   };
 
-  constructor(private dhtService: Dht11Service, private mqService: MqService) {}
+  constructor(private dhtService: Dht11Service, private mqService: MqService, private hcrsService: HcrsService) {}
   ngOnInit(): void {
     this.getDht();
     this.getMq();
@@ -118,8 +109,34 @@ export class DeviceDashboardComponent implements OnInit {
       });
     });
   }
+  getTriggeredDatesTimeInterval(selectedDate: String, selectedDateTomorrow: String){
+    this.hcrsService.getDhtsWithTimeInterval(selectedDate, selectedDateTomorrow).subscribe(hcrs=>{
+      console.log("🚀 ~ file: device-dashboard.component.ts ~ line 116 ~ DeviceDashboardComponent ~ this.hcrsService.getDhtsWithTimeInterval ~ hcrs", hcrs)
+    });
+  }
 
-  getDhtWithTimeInterval(selectedDate: String, selectedDateTomorrow: String) {
+  getAirQualitiesTimeInterval(selectedDate: String, selectedDateTomorrow: String){
+    let data2 = [
+      {
+        name: 'AirQuality',
+        series: [{ name: '', value: 0 }],
+      },
+    ];
+    
+    this.mqService.getMqWithTimeInterval(selectedDate, selectedDateTomorrow).subscribe((mq135s) => {
+    console.log("🚀 ~ file: device-dashboard.component.ts ~ line 129 ~ DeviceDashboardComponent ~ this.mqService.getMqWithTimeInterval ~ mq135s", mq135s)
+      
+      for (let i = 0; i < mq135s.length; i++) {
+        data2[0].series.push({
+          name: `${new Date(mq135s[i].date).getHours()}`,
+          value: Number(mq135s[i].airQualityValue),
+        });
+      }
+      this.airQualityList = data2;
+    });
+  }
+
+  getDhtsWithTimeInterval(selectedDate: String, selectedDateTomorrow: String) {
     let data = [
       {
         name: 'Heat',
@@ -131,22 +148,24 @@ export class DeviceDashboardComponent implements OnInit {
       },
     ];
     this.dhtService
-      .getDhtWithTimeInterval(selectedDate, selectedDateTomorrow)
+      .getDhtsWithTimeInterval(selectedDate, selectedDateTomorrow)
       .subscribe((dht11s) => {
+        // calculateAvarageOfHumidityAndHeat(dht11s); //return  dht11s
+        //1 2 3 //2
+
         for (let i = 0; i < dht11s.length; i++) {
-          console.log(i);
           data[0].series.push({
-            name: `${new Date(dht11s[i].date)}`,
+            name: `${new Date(dht11s[i].date).getHours()}`,
             value: Number(dht11s[i].heat),
           });
           data[1].series.push({
-            name: `${new Date(dht11s[i].date)}`,
+            name: `${new Date(dht11s[i].date).getHours()}`,
             value: Number(dht11s[i].humidity),
           });
         }
         this.dht11List = data;
         console.log(
-          '🚀 ~ file: device-dashboard.component.ts ~ line 94 ~ DeviceDashboardComponent ~ this.dhtService.getDhtWithTimeInterval ~ dht11s',
+          '🚀 ~ file: device-dashboard.component.ts ~ line 94 ~ DeviceDashboardComponent ~ this.dhtService.getDhtsWithTimeInterval ~ dht11s',
           dht11s
         );
       });
