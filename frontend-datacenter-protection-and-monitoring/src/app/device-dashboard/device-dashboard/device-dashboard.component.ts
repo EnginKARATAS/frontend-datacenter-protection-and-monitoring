@@ -6,7 +6,7 @@ import { Dht11Service } from 'src/app/core/services/dht11.service';
 import { HcrsService } from 'src/app/core/services/hcrs.service';
 import { MqService } from 'src/app/core/services/mq.service';
 
-export interface PeriodicElement {
+export interface TriggeredDistanceSensor {
   position?: number;
   name: string;
   device: string;
@@ -14,7 +14,7 @@ export interface PeriodicElement {
   triggeredDate: string;
 }
 
-const ELEMENT_DATA: PeriodicElement[] = [];
+const TRIGGERED_TABLE_DATA: TriggeredDistanceSensor[] = [];
 
 @Component({
   selector: 'app-device-dashboard',
@@ -69,7 +69,7 @@ export class DeviceDashboardComponent implements OnInit {
     'mac',
     'triggeredDate',
   ];
-  dataSource = ELEMENT_DATA;
+  dataSource = TRIGGERED_TABLE_DATA;
 
   dht11List: any[] = [];
   airQualityList: any[] = [];
@@ -106,7 +106,7 @@ export class DeviceDashboardComponent implements OnInit {
   }
   getMq() {
     this.mqService.getMq().subscribe((x) => {
-      let data2 = [
+      let mqTempArray = [
         {
           name: 'AirQuality',
           series: [{ name: '', value: 0 }],
@@ -115,12 +115,12 @@ export class DeviceDashboardComponent implements OnInit {
 
       this.mqService.getMq().subscribe((a) => {
         for (let i = 0; i < a.length; i++) {
-          data2[0].series.push({
-            name: `${new Date(x[i].date).getHours()}`,
+          mqTempArray[0].series.push({
+            name: `${new Date(x[i].date).getHours()}:00`,
             value: Number(x[i].airQualityValue),
           });
         }
-        this.airQualityList = data2;
+        this.airQualityList = mqTempArray;
       });
     });
   }
@@ -128,19 +128,20 @@ export class DeviceDashboardComponent implements OnInit {
     selectedDate: String,
     selectedDateTomorrow: String
   ) {
+    let triggeredTemporaryArray: any = [];
     this.hcrsService
       .getDhtsWithTimeInterval(selectedDate, selectedDateTomorrow)
       .subscribe((hcrs) => {
         for (let i = 0; i < hcrs.length; i++) {
-          this.dataSource.push({
+          triggeredTemporaryArray.push({
             name: hcrs[i].device.name.substr(0, 44),
             device: hcrs[i].device.name.substr(44),
             mac: hcrs[i].device.mac_adres,
             triggeredDate: hcrs[i].triggeredDate,
           });
-
-          this.dataSource = [...this.dataSource];
         }
+        this.dataSource = triggeredTemporaryArray;
+        this.dataSource = [...this.dataSource];
       });
   }
 
@@ -148,7 +149,7 @@ export class DeviceDashboardComponent implements OnInit {
     selectedDate: String,
     selectedDateTomorrow: String
   ) {
-    let data2 = [
+    let mqTempArray = [
       {
         name: 'AirQuality',
         series: [{ name: '', value: 500 }],
@@ -158,9 +159,10 @@ export class DeviceDashboardComponent implements OnInit {
     this.mqService
       .getMqWithTimeInterval(selectedDate, selectedDateTomorrow)
       .subscribe((mq135s) => {
+
+        //start of calculate avarage of times
         let saatler_uni: any = [];
         let saatler = [];
-
         for (let i = 0; i < mq135s.length; i++) {
           var tarih = new Date(mq135s[i].date);
           saatler.push(tarih.getHours());
@@ -207,21 +209,27 @@ export class DeviceDashboardComponent implements OnInit {
           var id = i;
           avarageArray.push({ id, d, airQualityValue, device });
         }
+        //end of calculate avarage of times
 
         for (let i = 0; i < avarageArray.length; i++) {
-          data2[0].series.push({
-            name: `${new Date(avarageArray[i].d).getHours()}`,
+          mqTempArray[0].series.push({
+            name: `${new Date(avarageArray[i].d).getHours()}:00`,
             value: Number(avarageArray[i].airQualityValue),
           });
         }
-        console.log("🚀 ~ file: device-dashboard.component.ts ~ line 216 ~ DeviceDashboardComponent ~ .subscribe ~ data2", data2)
-        
-        this.airQualityList = data2;
+        console.log(
+          '🚀 ~ file: device-dashboard.component.ts ~ line 216 ~ DeviceDashboardComponent ~ .subscribe ~ mqTempArray',
+          mqTempArray
+        );
+
+        this.airQualityList = mqTempArray;
       });
   }
 
+
+  
   getDhtsWithTimeInterval(selectedDate: String, selectedDateTomorrow: String) {
-    let data = [
+    let dhtTempArr = [
       {
         name: 'Heat',
         series: [{ name: '', value: 0 }],
@@ -234,20 +242,75 @@ export class DeviceDashboardComponent implements OnInit {
     this.dhtService
       .getDhtsWithTimeInterval(selectedDate, selectedDateTomorrow)
       .subscribe((dht11s) => {
-        // calculateAvarageOfHumidityAndHeat(dht11s); //return  dht11s
-        //1 2 3 //2
-
+        let saatler_uni: any = [];
+        let saatler = [];
         for (let i = 0; i < dht11s.length; i++) {
-          data[0].series.push({
-            name: `${new Date(dht11s[i].date).getHours()}`,
-            value: Number(dht11s[i].heat),
+          var tarih = new Date(dht11s[i].date);
+          saatler.push(tarih.getHours());
+        }
+        saatler.forEach((c) => {
+          if (!saatler_uni.includes(c)) {
+            saatler_uni.push(c);
+          }
+        });
+
+        let obj = [];
+        for (var j = 0; j < saatler_uni.length; j++) {
+          var lo = [];
+          for (var a = 0; a < dht11s.length; a++) {
+            var tarih = new Date(dht11s[a].date);
+
+            if (tarih.getHours() == saatler_uni[j]) {
+              var saat = saatler_uni[j];
+              var veri = dht11s[a];
+              var heat = parseInt(veri.heat);
+              var humidity = parseInt(veri.humidity);
+
+              lo.push({ saat, veri });
+            }
+          }
+          obj.push(lo);
+        }
+
+        var avarageArray = [];
+        for (let i = 0; i < obj.length; i++) {
+          let sabir = obj[i];
+
+          let sumHeat = 0;
+          let sumHumidity = 0;
+          let heatValue = 0;
+          let humidityValue = 0;
+          let d = '';
+          let device = null;
+          for (let j = 0; j < sabir.length; j++) {
+            var heat = parseInt(sabir[j].veri.heat);
+            var humidity = parseInt(sabir[j].veri.humidity);
+            sumHeat = sumHeat + heat;
+            sumHumidity = sumHeat + humidity;
+            heatValue = sumHeat / sabir.length;
+            humidityValue = sumHumidity / sabir.length
+            d =
+              sabir[j].veri.date.toString().split(' ')[0] + ' ' + sabir[j].saat + ':00:00';
+            device = sabir[j].veri.device;
+          }
+          var id = i;
+          avarageArray.push({ id, d, heatValue, humidityValue, device });
+        }
+        console.log("🚀 ~ file: device-dashboard.component.ts ~ line 295 ~ DeviceDashboardComponent ~ .subscribe ~ avarageArray", avarageArray)
+
+        for (let i = 0; i < avarageArray.length; i++) {
+          dhtTempArr[0].series.push({
+            name: `${new Date(avarageArray[i].d).getHours()}:00`,
+            value: Number(avarageArray[i].heatValue),
           });
-          data[1].series.push({
-            name: `${new Date(dht11s[i].date).getHours()}`,
-            value: Number(dht11s[i].humidity),
+          dhtTempArr[1].series.push({
+            name: `${new Date(avarageArray[i].d).getHours()}:00`,
+            value: Number(avarageArray[i].humidityValue),
           });
         }
-        this.dht11List = data;
+        
+        this.dht11List = dhtTempArr;
+        this.dht11List = [...this.dht11List]
       });
   }
 
@@ -266,7 +329,7 @@ export class DeviceDashboardComponent implements OnInit {
     this.dhtService.getDht().subscribe((x) => {
       for (let i = 0; i < x.length; i++) {
         data[0].series.push({
-          name: `${new Date(x[i].date).getHours()}`,
+          name: `${new Date(x[i].date).getHours()}:00`,
           value: Number(x[i].heat),
         });
         data[1].series.push({
