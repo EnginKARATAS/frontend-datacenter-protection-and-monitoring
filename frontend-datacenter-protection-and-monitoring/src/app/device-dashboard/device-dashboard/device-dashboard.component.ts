@@ -20,6 +20,7 @@ const TRIGGERED_TABLE_DATA: TriggeredDistanceSensor[] = [];
   selector: 'app-device-dashboard',
   templateUrl: './device-dashboard.component.html',
   styleUrls: ['./device-dashboard.component.css'],
+  
 })
 export class DeviceDashboardComponent implements OnInit {
   events: string[] = [];
@@ -101,8 +102,6 @@ export class DeviceDashboardComponent implements OnInit {
     private hcrsService: HcrsService
   ) {}
   ngOnInit(): void {
-    this.getDht();
-    this.getMq();
   }
   getMq() {
     this.mqService.getMq().subscribe((x) => {
