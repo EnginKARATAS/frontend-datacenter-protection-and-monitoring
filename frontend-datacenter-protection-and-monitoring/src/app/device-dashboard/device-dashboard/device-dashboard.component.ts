@@ -86,10 +86,10 @@ export class DeviceDashboardComponent implements OnInit {
   showXAxisLabel: boolean = true;
   showYAxisLabel2: boolean = true;
   showXAxisLabel2: boolean = true;
-  xAxisLabel: string = 'Time';
-  yAxisLabel: string = 'Heat';
-  xAxisLabel2: string = 'Air';
-  yAxisLabel2: string = 'Level Of Critical';
+  xAxisLabel: string = 'Hour(Avarage of hours. Formula=Hour datas sum/data lenght)';;
+  yAxisLabel: string = 'Heat & Humidity';
+  xAxisLabel2: string = 'Hour(Avarage of hours. Formula=Hour datas sum/data lenght)';
+  yAxisLabel2: string = 'Level Of Air Quality';
   timeline: boolean = true;
 
   colorScheme = {
@@ -212,14 +212,11 @@ export class DeviceDashboardComponent implements OnInit {
 
         for (let i = 0; i < avarageArray.length; i++) {
           mqTempArray[0].series.push({
-            name: `${new Date(avarageArray[i].d).getHours()}:00`,
+            name: `${new Date(avarageArray[i].d).getHours()}`,
             value: Number(avarageArray[i].airQualityValue),
           });
         }
-        console.log(
-          '🚀 ~ file: device-dashboard.component.ts ~ line 216 ~ DeviceDashboardComponent ~ .subscribe ~ mqTempArray',
-          mqTempArray
-        );
+        mqTempArray[0].series.sort(function(a, b){return Number(a.name) - Number(b.name)})
 
         this.airQualityList = mqTempArray;
       });
@@ -299,15 +296,19 @@ export class DeviceDashboardComponent implements OnInit {
 
         for (let i = 0; i < avarageArray.length; i++) {
           dhtTempArr[0].series.push({
-            name: `${new Date(avarageArray[i].d).getHours()}:00`,
+            name: `${new Date(avarageArray[i].d).getHours()}`,
             value: Number(avarageArray[i].heatValue),
           });
           dhtTempArr[1].series.push({
-            name: `${new Date(avarageArray[i].d).getHours()}:00`,
+            name: `${new Date(avarageArray[i].d).getHours()}`,
             value: Number(avarageArray[i].humidityValue),
           });
         }
         
+        dhtTempArr[0].series.sort(function(a, b){return Number(a.name) - Number(b.name)})
+        dhtTempArr[1].series.sort(function(a, b){return Number(a.name) - Number(b.name)})
+        
+        console.log("🚀 ~ file: device-dashboard.component.ts ~ line 312 ~ DeviceDashboardComponent ~ .subscribe ~ dhtTempArr", dhtTempArr)
         this.dht11List = dhtTempArr;
         this.dht11List = [...this.dht11List]
       });
